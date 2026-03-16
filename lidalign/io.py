@@ -22,7 +22,9 @@ import netCDF4 as nc
 
 
 datatypes = {
-    "wind_and_aerosols_data": {"file_split_columns": ["lidar", "date", "time", "type", "ScanID", "ext"]},
+    "wind_and_aerosols_data": {
+        "file_split_columns": ["lidar", "date", "time", "type", "ScanID", "ext"]
+    },
     "environmental_data": {"file_split_columns": ["lidar", "f1", "f2", "date", "time"]},
     "scans": {"file_split_columns": ["lidar", "ScanID", "name"]},
 }
@@ -60,7 +62,9 @@ class FileDB:
         self.info_df = pd.DataFrame(groups, columns=names.keys())  # , dtype = names)
         self.info_df = self.info_df.astype(names)
         self.info_df["filename"] = [f.name for f in self.all_files]
-        self.info_df["full_path"] = [str(f) for f in self.all_files]  # tqdm(self.all_files, desc="Resolving paths")
+        self.info_df["full_path"] = [
+            str(f) for f in self.all_files
+        ]  # tqdm(self.all_files, desc="Resolving paths")
 
     def filter_file_names(
         self,
@@ -84,10 +88,14 @@ class FileDB:
         # self.info_df["UTC"].max()
         self.start = pd.to_datetime(start)
         self.end = pd.to_datetime(end)
-        self.start = self.start.tz_localize("UTC") if self.start.tzinfo is None else self.start
+        self.start = (
+            self.start.tz_localize("UTC") if self.start.tzinfo is None else self.start
+        )
         self.end = self.end.tz_localize("UTC") if self.end.tzinfo is None else self.end
 
-        self.filtered_files = self.info_df.where(self.info_df["file_start_date"].between(self.start, self.end)).dropna()
+        self.filtered_files = self.info_df.where(
+            self.info_df["file_start_date"].between(self.start, self.end)
+        ).dropna()
 
         return self
 
@@ -117,20 +125,26 @@ class FileDB:
 
         self.start = pd.Timestamp(start)
         self.end = pd.Timestamp(end)
-        self.start = self.start.tz_localize("UTC") if self.start.tzinfo is None else self.start
+        self.start = (
+            self.start.tz_localize("UTC") if self.start.tzinfo is None else self.start
+        )
         self.end = self.end.tz_localize("UTC") if self.end.tzinfo is None else self.end
 
         print(f"\t Filtering for {start} to {end}, {filename_regex} ")
-        self.filtered_files = self.info_df.where(self.info_df["UTC"].between(self.start, self.end)).dropna()
-
+        self.filtered_files = self.info_df.where(
+            self.info_df["UTC"].between(self.start, self.end)
+        ).dropna()
 
         if filename_regex is not None:
 
-
-            self.filtered_files = self.filtered_files.loc[self.filtered_files["full_path"].str.contains(filename_regex)]
+            self.filtered_files = self.filtered_files.loc[
+                self.filtered_files["full_path"].str.contains(filename_regex)
+            ]
 
         self.filtered_files_list = self.filtered_files["pathlib"].dropna().values
-        print(f"\t --> {len(self.filtered_files)} files found for given regex and time range")
+        print(
+            f"\t --> {len(self.filtered_files)} files found for given regex and time range"
+        )
 
         return self
 
@@ -161,7 +175,9 @@ class RawEnvironmentalDB(FileDB):
     def __init__(self, path: str):
         super().__init__(path, regex="*.csv")
         self._get_file_information(self.filepattern, self.names)
-        self.info_df["file_start_date"] = pd.to_datetime(self.info_df["Time"], format="%Y%m%d_%H%M%S", utc=True)
+        self.info_df["file_start_date"] = pd.to_datetime(
+            self.info_df["Time"], format="%Y%m%d_%H%M%S", utc=True
+        )
 
     def read_period(self, **kwargs):
         self.filter_file_names(**kwargs)
@@ -169,7 +185,9 @@ class RawEnvironmentalDB(FileDB):
         if len(files) == 0:
             print("No files found for the given time period.")
             return pd.DataFrame()
-        df = pd.concat([self.read_file(f) for f in tqdm(files, desc="Reading files")], axis=0)
+        df = pd.concat(
+            [self.read_file(f) for f in tqdm(files, desc="Reading files")], axis=0
+        )
         return df
 
     def read_file(self, f):
@@ -187,7 +205,9 @@ class WindCubeScanDB(FileDB):
         self,
         path_to_campaign: str,
         # lidar_name: str = "WLS200S-24",
-        datatype: Literal["wind_and_aerosols_data", "environmental_data", "scans"] = "wind_and_aerosols_data",
+        datatype: Literal[
+            "wind_and_aerosols_data", "environmental_data", "scans"
+        ] = "wind_and_aerosols_data",
         file_structure: Literal["native_vaisala", "flat"] = "native_vaisala",
         verbose=0,
         prefilter_dates: dict | None = None,
@@ -207,7 +227,9 @@ class WindCubeScanDB(FileDB):
         self.datatype = datatype
         self.file_structure = file_structure
         self.position = position
-        self._get_all_files(file_structure=file_structure, prefilter_dates=prefilter_dates)
+        self._get_all_files(
+            file_structure=file_structure, prefilter_dates=prefilter_dates
+        )
         self._get_file_datetime()
 
     # def _get_all_files(self, file_structure: Literal["native_vaisala", "flat"] = "native_vaisala",
@@ -215,7 +237,9 @@ class WindCubeScanDB(FileDB):
     #     self._get_all_files(file_structure=file_structure, prefilter_dates = prefilter_dates)
 
     def _get_all_files(
-        self, file_structure: Literal["native_vaisala", "flat"] = "native_vaisala", prefilter_dates: dict = None
+        self,
+        file_structure: Literal["native_vaisala", "flat"] = "native_vaisala",
+        prefilter_dates: dict = None,
     ):
         """Get ALL filenames that are in the "database"
 
@@ -252,12 +276,16 @@ class WindCubeScanDB(FileDB):
             raise ValueError(f'Format "{file_structure}" not supported')
 
         if prefilter_dates is not None:
-            dates = pd.date_range(prefilter_dates["start"], prefilter_dates["end"], freq="1d").date
+            dates = pd.date_range(
+                prefilter_dates["start"], prefilter_dates["end"], freq="1d"
+            ).date
 
             # glob_path = '^(' + '|'.join([d.strftime('%Y-%m-%d') for d in dates]) +')' + glob_path[1:]
             all_files = []
             for d in tqdm(dates, desc="Prefiltering dates to get all files"):
-                all_files += list(self.path.glob(d.strftime("%Y-%m-%d") + glob_path[1:]))
+                all_files += list(
+                    self.path.glob(d.strftime("%Y-%m-%d") + glob_path[1:])
+                )
             self.all_files = all_files
         else:
             self.all_files = list(self.path.glob(glob_path))
@@ -266,24 +294,32 @@ class WindCubeScanDB(FileDB):
 
     def _get_file_datetime(self):
         """Get more information from the filenames"""
-        splitfilename = [file.stem.replace(".csv", "").split("_") for file in self.all_files]
+        splitfilename = [
+            file.stem.replace(".csv", "").split("_") for file in self.all_files
+        ]
 
         if self.datatype != "scans":
-            self.info_df = pd.DataFrame(splitfilename, columns=datatypes[self.datatype]["file_split_columns"])
+            self.info_df = pd.DataFrame(
+                splitfilename, columns=datatypes[self.datatype]["file_split_columns"]
+            )
             self.info_df["UTC"] = pd.to_datetime(
                 self.info_df["date"] + " " + self.info_df["time"].str.replace("-", ":"),
                 utc=True,
             )
         else:
             splitfilename = [[f[0], f[1], "_".join(f[2:])] for f in splitfilename]
-            self.info_df = pd.DataFrame(splitfilename, columns=datatypes[self.datatype]["file_split_columns"])
+            self.info_df = pd.DataFrame(
+                splitfilename, columns=datatypes[self.datatype]["file_split_columns"]
+            )
 
         self.info_df["pathlib"] = self.all_files
         self.info_df["filename"] = [f.name for f in self.all_files]
         self.info_df["full_path"] = [str(f) for f in self.all_files]
         if self.datatype == "scans":
             if self.file_structure != "flat":
-                self.info_df["UTC"] = pd.to_datetime([f.parts[-3] for f in self.info_df["pathlib"].values], utc=True)
+                self.info_df["UTC"] = pd.to_datetime(
+                    [f.parts[-3] for f in self.info_df["pathlib"].values], utc=True
+                )
             else:
                 self.info_df["UTC"] = pd.to_datetime("2025-01-01", utc=True)
 
@@ -321,12 +357,16 @@ class WindCubeScanDB(FileDB):
         """
         self.get_filtered_filelist(start, end, timedelta_back, filename_regex)
         if self.datatype == "wind_and_aerosols_data":
-            ds = self.read_wind_files(self.filtered_files_list, concatenated=concatenated, **read_kwargs)
+            ds = self.read_wind_files(
+                self.filtered_files_list, concatenated=concatenated, **read_kwargs
+            )
 
         elif self.datatype == "environmental_data":
             dflist = [
                 pd.read_csv(f, sep=";", header=0)
-                for f in tqdm(self.filtered_files_list, desc="Reading environmental files")
+                for f in tqdm(
+                    self.filtered_files_list, desc="Reading environmental files"
+                )
             ]
             if len(dflist) == 0:
                 print("No environment data")
@@ -337,10 +377,8 @@ class WindCubeScanDB(FileDB):
             ds = ds.drop_vars("Unit")
             # need to create datetime index again
             ds["Timestamp"] = pd.to_datetime(ds["Timestamp"], utc=True)
-    
-        return ds
 
-   
+        return ds
 
     def read_wind_files(
         self,
@@ -377,8 +415,10 @@ class WindCubeScanDB(FileDB):
             files = files[:max_n]
         if processes == 1:
             for file in tqdm(files, desc="Reading files"):
-                dsf = self._read_wind_file(file, generate_utc_time, position=self.position, **read_kwargs)
-                
+                dsf = self._read_wind_file(
+                    file, generate_utc_time, position=self.position, **read_kwargs
+                )
+
                 if sel_kwargs is not None:
 
                     dsf = dsf.sel(**sel_kwargs)
@@ -394,7 +434,9 @@ class WindCubeScanDB(FileDB):
             # is not really faster
             from joblib import Parallel, delayed
 
-            data = Parallel(n_jobs=processes, verbose=10)(delayed(read_single)(f) for f in files)
+            data = Parallel(n_jobs=processes, verbose=10)(
+                delayed(read_single)(f) for f in files
+            )
 
         if concatenated:
             all_ds = xr.concat(data, dim="timestamp")
@@ -428,7 +470,6 @@ class WindCubeScanDB(FileDB):
         Returns:
             _type_: _description_
         """
-        # TODO: check functionality for dict return and volumetric scans (multiple sweeps in one file)
 
         if isinstance(filename, str):
             filename = Path(filename)
@@ -438,13 +479,20 @@ class WindCubeScanDB(FileDB):
             return_data = []
             keys = filedata.groups.keys()
             sweeps = [g for g in keys if "sweep" in g.lower()]
-            azimuth_correction = filedata.groups["georeference_correction"]["azimuth_correction"][:]
+            azimuth_correction = filedata.groups["georeference_correction"][
+                "azimuth_correction"
+            ][:]
 
             # TODO: numpy return with volume stuff
             for sweep in sweeps:
                 sweep_no = sweep.split("_")[-1]
                 variables = list(filedata.groups[sweep].variables.keys())
-                toplevel_variables = ["latitude", "longitude", "altitude", "sweep_fixed_angle"]
+                toplevel_variables = [
+                    "latitude",
+                    "longitude",
+                    "altitude",
+                    "sweep_fixed_angle",
+                ]
                 if returntype == "simplified":
                     variables = [
                         "azimuth",
@@ -459,30 +507,38 @@ class WindCubeScanDB(FileDB):
                         "sweep_index",
                         "timestamp",
                         "range_gate_length",
-                        "rotation_direction"
+                        "rotation_direction",
                     ]
-                data = {var: np.atleast_1d(filedata.groups[sweep][var][:]) for var in variables}
-                toplevel_data = {var: np.atleast_1d(filedata[var][:]) for var in toplevel_variables}
+                data = {
+                    var: np.atleast_1d(filedata.groups[sweep][var][:])
+                    for var in variables
+                }
+                toplevel_data = {
+                    var: np.atleast_1d(filedata[var][:]) for var in toplevel_variables
+                }
                 data = data | toplevel_data
 
-                data["time"] = pd.to_datetime(data["timestamp"], utc=True, format="ISO8601")
-                
+                data["time"] = pd.to_datetime(
+                    data["timestamp"], utc=True, format="ISO8601"
+                )
+
                 variables += ["time"]
                 # data["mean_elevation"] = np.full_like(data["elevation"], np.mean(data["elevation"]))
                 # variables += ["mean_elevation"]
 
                 if get_middle_azimuth and data["sweep_mode"][0] != "fixed":
-                   
+
                     # direct: clockwise, indirect: anticlockwise
                     sign = np.where(data["rotation_direction"] == "direct", 1, -1)
                     azi_diffs = np.diff(
-                        data["azimuth"], prepend=data["azimuth"][0] - sign[0] * data["ray_angle_resolution"]
+                        data["azimuth"],
+                        prepend=data["azimuth"][0]
+                        - sign[0] * data["ray_angle_resolution"],
                     )
                     # correct for 360/0 jumps
                     azi_diffs = (azi_diffs + 180) % 360 - 180
                     azimuth_middle = (data["azimuth"] - sign * azi_diffs / 2) % 360
                     data["azimuth"] = azimuth_middle
-                   
 
                 if returnformat == "dict":
                     data["sweep"] = np.array([sweep_no])
@@ -525,7 +581,9 @@ class WindCubeScanDB(FileDB):
                 return_dict = dict()
                 if len(sweeps) > 1:
                     for var in variables:
-                        return_dict[var] = np.concatenate([return_data[i][var] for i, v in enumerate(sweeps)], axis=0)
+                        return_dict[var] = np.concatenate(
+                            [return_data[i][var] for i, v in enumerate(sweeps)], axis=0
+                        )
                 else:
                     return_dict = {var: return_data[0][var] for var in variables}
                 return_dict["time"] = return_dict["timestamp"]
@@ -555,11 +613,13 @@ class WindCubeScanDB(FileDB):
 
                     if len(sweepdims) > 0:
                         sweepdims_ds = xr.merge(sweepdims)
-                        sweepdims_ds = sweepdims_ds.assign_coords(sweep=np.arange(0, len(sweepdims_ds.sweep)) + 1)
-
-                        all_ds[list(sweepdims_ds.keys())] = sweepdims_ds.sel(sweep=all_ds["sweep_index"]).drop_vars(
-                            "sweep"
+                        sweepdims_ds = sweepdims_ds.assign_coords(
+                            sweep=np.arange(0, len(sweepdims_ds.sweep)) + 1
                         )
+
+                        all_ds[list(sweepdims_ds.keys())] = sweepdims_ds.sel(
+                            sweep=all_ds["sweep_index"]
+                        ).drop_vars("sweep")
 
                 return all_ds
 
@@ -572,17 +632,22 @@ class WindCubeScanDB(FileDB):
             with nc.Dataset(filename, mode="r") as da:
                 ds = _extract_ncdata(da, **kwargs)
 
-
         if filter:
             conditions = (ds["radial_wind_speed_status"] == 1) & (ds["cnr"] < 5)
             if returnformat == "xarray":
-                ds["radial_wind_speed"] = ds["radial_wind_speed"].where(conditions, np.nan)
+                ds["radial_wind_speed"] = ds["radial_wind_speed"].where(
+                    conditions, np.nan
+                )
             else:
-                ds["radial_wind_speed"] = np.where(conditions, ds["radial_wind_speed"], np.nan)
+                ds["radial_wind_speed"] = np.where(
+                    conditions, ds["radial_wind_speed"], np.nan
+                )
 
         if remove_azimuth_offset:
             if returnformat != "xarray":
-                raise ValueError("remove_azimuth_offset only works for xarray returnformat")
+                raise ValueError(
+                    "remove_azimuth_offset only works for xarray returnformat"
+                )
             attrs = ds["azimuth"].attrs
             ds["azimuth"] = (ds["azimuth"] + ds["azimuth_correction"]) % 360
             ds["azimuth_correction"] = 0
@@ -594,10 +659,10 @@ class WindCubeScanDB(FileDB):
 
         if get_middle_azimuth and ds["sweep_mode"][0] != "fixed":
 
-
             sign = xr.where(ds["rotation_direction"] == "direct", 1, -1)
-            azimuth_middle = (ds["azimuth"] - ds["ray_angle_resolution"] * sign / 2) % 360
-
+            azimuth_middle = (
+                ds["azimuth"] - ds["ray_angle_resolution"] * sign / 2
+            ) % 360
 
             if returnformat == "dict":
                 ds["azimuth"] = azimuth_middle
@@ -610,7 +675,9 @@ class WindCubeScanDB(FileDB):
             ds["hor_distance"] = np.cos(np.deg2rad(ds["elevation"])) * ds["range"]
             ds["dz"] = np.sin(np.deg2rad(ds["elevation"])) * ds["range"]
         else:
-            ds["hor_distance"] = np.cos(np.deg2rad(ds["elevation"])) * ds["range"][:, np.newaxis]
+            ds["hor_distance"] = (
+                np.cos(np.deg2rad(ds["elevation"])) * ds["range"][:, np.newaxis]
+            )
             ds["dz"] = np.sin(np.deg2rad(ds["elevation"])) * ds["range"][:, np.newaxis]
 
         ds["dx"] = np.sin(np.deg2rad(ds["azimuth"])) * ds["hor_distance"]
@@ -628,5 +695,3 @@ class WindCubeScanDB(FileDB):
         if returnformat == "dict":
             return ds
         return ds
-
-

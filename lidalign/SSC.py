@@ -76,7 +76,9 @@ class PulseShape:
         Returns:
             NDArray[np.float64]: function weighting
         """
-        raise NotImplementedError("get_weighting method must be implemented in subclass")
+        raise NotImplementedError(
+            "get_weighting method must be implemented in subclass"
+        )
 
     def __repr__(self):
         pass
@@ -126,7 +128,9 @@ class GaussianTruncatedPulse(PulseShape):
         return truncated_func_norm
 
     @staticmethod
-    def fit_weighting_to_data(r_data: NDArray[np.float64], signal_strength: NDArray[np.float64]) -> NDArray[np.float64]:
+    def fit_weighting_to_data(
+        r_data: NDArray[np.float64], signal_strength: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """Fit the Pulse shape to given radial distribution of Signal strength. Can be used e.g., to fit the truncated gaussian to the CNR signal of a hard target.
 
         Args:
@@ -239,12 +243,19 @@ def inverse_sigmoid(
     """
 
     exponent = (r - mid) * growth
-    exponent = np.clip(exponent, -700, 700)  # ensure no overflow (overflow starts at 709)
+    exponent = np.clip(
+        exponent, -700, 700
+    )  # ensure no overflow (overflow starts at 709)
     return (up - down) / (1 + np.exp(exponent)) + down
 
 
 def inverse_sigmoid_Gra24(
-    r: float | NDArray[np.float64], mid: float, down: float, up: float, growth: float, lin_fac: float
+    r: float | NDArray[np.float64],
+    mid: float,
+    down: float,
+    up: float,
+    growth: float,
+    lin_fac: float,
 ) -> NDArray[np.float64]:
     """Sigmoid function for fitting CNR data for water range detection, using a linear decay/increase before the drop.
 
@@ -274,14 +285,19 @@ def inverse_sigmoid_Gra24(
 
 
 def inverse_sigmoid_dbscale(
-    r: float | NDArray[np.float64], mid: float, down: float, up: float, growth: float, lin_fac: float
+    r: float | NDArray[np.float64],
+    mid: float,
+    down: float,
+    up: float,
+    growth: float,
+    lin_fac: float,
 ) -> NDArray[np.float64]:
     """Inverse sigmoid in DB scale. All inputs must be in dB scale.
 
     we do not recommend using this function
 
     Following:
-    Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+    Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 
     Args:
         r (float | NDArray[np.float64]): radial distance of range gate center
@@ -306,12 +322,17 @@ def inverse_sigmoid_dbscale(
 
 
 def inverse_sigmoid_linscale(
-    r: float | NDArray[np.float64], mid: float, down: float, up: float, growth: float, lin_fac: float
+    r: float | NDArray[np.float64],
+    mid: float,
+    down: float,
+    up: float,
+    growth: float,
+    lin_fac: float,
 ) -> NDArray[np.float64]:
     """Inverse sigmoid in linear scale. Same as inverse_sigmoid_dB but output format is linear scale. INPUT MUST BE dB SCALE
 
     Following:
-        Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+        Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 
     Args:
         r (float | NDArray[np.float64]): radial distance of range gate center
@@ -324,10 +345,16 @@ def inverse_sigmoid_linscale(
     Returns:
         NDArray[np.float64]: Sigmoid function (r) in linear scale
     """
-    inv_sigmo = inverse_sigmoid(r, mid, 0, db2linear(up), growth) # sigmoid falls down to zero, as we assume a perfect signal
-    prefactor = db2linear(lin_fac * (r - mid))  # remove the 1 from Gramitzky et al. (2024)
+    inv_sigmo = inverse_sigmoid(
+        r, mid, 0, db2linear(up), growth
+    )  # sigmoid falls down to zero, as we assume a perfect signal
+    prefactor = db2linear(
+        lin_fac * (r - mid)
+    )  # remove the 1 from Gramitzky et al. (2024)
     signal = np.where(r < mid, inv_sigmo * prefactor, inv_sigmo)
-    return np.where(signal > db2linear(down), signal, db2linear(down))  # lower limit of CNR (noise)
+    return np.where(
+        signal > db2linear(down), signal, db2linear(down)
+    )  # lower limit of CNR (noise)
 
 
 def model_cnr_signal_CDF(
@@ -368,7 +395,13 @@ class CNRFitResult:
 class WaterRangeDetection:
     """Base class for the detection of the lidar-water range r_w"""
 
-    def __init__(self, data_db: xr.Dataset, pulse: PulseShape = None, verbose: int = 0, input_in_db: bool = True):
+    def __init__(
+        self,
+        data_db: xr.Dataset,
+        pulse: PulseShape = None,
+        verbose: int = 0,
+        input_in_db: bool = True,
+    ):
         """Initialize Water Range Detection
 
         Args:
@@ -443,28 +476,42 @@ class WaterRangeDetection:
         # ----------------------------- pad the cnr data ----------------------------- #
         rdiff = np.diff(r)
         dr = np.round(np.min(rdiff), 3)  # range gate resolution
-        r_range_gate = np.arange(0, pulse_object.gate_length, dr) + dr  # discretize the range gate
+        r_range_gate = (
+            np.arange(0, pulse_object.gate_length, dr) + dr
+        )  # discretize the range gate
         n_values_pad = len(r_range_gate)
-        r_padded = np.concat([r[0] - r_range_gate[::-1], r, r[-1] + r_range_gate])  # padd range array for convolution
+        r_padded = np.concat(
+            [r[0] - r_range_gate[::-1], r, r[-1] + r_range_gate]
+        )  # padd range array for convolution
 
         # ------------------------- estimate water cnr curve ------------------------- #
-        cnr_signal_water_db = WaterRangeDetection._linear_signal_decay(r_padded, R_water, cnr_slope, cnr_offset)
+        cnr_signal_water_db = WaterRangeDetection._linear_signal_decay(
+            r_padded, R_water, cnr_slope, cnr_offset
+        )
         cnr_signal_water = db2linear(
             cnr_signal_water_db
         )  # convert into dB scale, where the linear function becomes exponential
 
         # ------------------------- calculate pulse weighting ------------------------ #
-        r_pulse = np.arange(-pulse_object.gate_length / 2, pulse_object.gate_length / 2 + dr, dr)
+        r_pulse = np.arange(
+            -pulse_object.gate_length / 2, pulse_object.gate_length / 2 + dr, dr
+        )
         pulse_weighting = pulse_object.get_weighting(r_pulse)
 
         # --------------------------- calculate convolution -------------------------- #
-        modeled_function = np.convolve(cnr_signal_water, pulse_weighting, mode="same") / np.sum(pulse_weighting)
+        modeled_function = np.convolve(
+            cnr_signal_water, pulse_weighting, mode="same"
+        ) / np.sum(pulse_weighting)
 
         # ------------------------------ remove padding ------------------------------ #
         modeled_function = modeled_function[n_values_pad:-n_values_pad]
 
         #  --------------------------- add noise floor level -------------------------- #
-        modeled_function = np.where(modeled_function > db2linear(cnr_noise), modeled_function, db2linear(cnr_noise))
+        modeled_function = np.where(
+            modeled_function > db2linear(cnr_noise),
+            modeled_function,
+            db2linear(cnr_noise),
+        )
 
         if return_dB:
             # return in decibel scale
@@ -473,7 +520,9 @@ class WaterRangeDetection:
         return modeled_function
 
     @staticmethod
-    def convolution_fit_error(params: tuple, data: xr.DataArray, pulse: PulseShape, use_linear_scale: bool) -> float:
+    def convolution_fit_error(
+        params: tuple, data: xr.DataArray, pulse: PulseShape, use_linear_scale: bool
+    ) -> float:
         """Calculate the fit error (sum of sqared errors) for convolution with fixed FWHM of pulse
 
         Args:
@@ -493,7 +542,13 @@ class WaterRangeDetection:
 
         # get the modeled function in the same scale as input data
         modeled_function = WaterRangeDetection.model_cnr_signal_convolution(
-            r, R_water, cnr_slope, cnr_offset, pulse, cnr_noise=cnr_noise, return_dB=not use_linear_scale
+            r,
+            R_water,
+            cnr_slope,
+            cnr_offset,
+            pulse,
+            cnr_noise=cnr_noise,
+            return_dB=not use_linear_scale,
         )
 
         error = np.sum((modeled_function - cnr) ** 2)
@@ -526,7 +581,9 @@ class WaterRangeDetection:
         """Wrapper function to get modeled CNR signal for convolution fit with fixed pulse FWHM"""
         # get model function in linear scale
         cnr_noise = params[-1]
-        modeled_cnr = WaterRangeDetection.model_cnr_signal_convolution(r, *params[:-1], self.pulse, cnr_noise=cnr_noise)
+        modeled_cnr = WaterRangeDetection.model_cnr_signal_convolution(
+            r, *params[:-1], self.pulse, cnr_noise=cnr_noise
+        )
 
         if not self.use_linear_scale:
             modeled_cnr = linear2db(modeled_cnr)
@@ -550,7 +607,14 @@ class WaterRangeDetection:
         cnr_hard_target: float = 0,  # in dB
         use_bounds: bool = True,
         func: Literal[
-            "LinSig", "dBSig", "Gra24", "Rot22", "dBConvo", "Convo_pulse", "Convo", "LinConvo_pulse"
+            "LinSig",
+            "dBSig",
+            "Gra24",
+            "Rot22",
+            "dBConvo",
+            "Convo_pulse",
+            "Convo",
+            "LinConvo_pulse",
         ] = "LinSig",
         fit_method: Literal["curve_fit", "minimize", "LSQ"] = "LSQ",
         dist_guess: float = None,
@@ -577,7 +641,7 @@ class WaterRangeDetection:
 
 
         Follows:
-             Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+             Meyer, P.J., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 
 
         Args:
@@ -603,12 +667,14 @@ class WaterRangeDetection:
         Returns:
             CNRFitResult: Fit Results dataclass with water range and fit success (and plot or fit data if requested)
         """
-        
+
         data_db = self.data_db.copy()
         verbose = self.verbose
 
         # ---------------------------- preadjust cnr data ---------------------------- #
-        valid = WaterRangeDetection._prepare_cnr_data(data_db, min_cnr, cnr_hard_target, verbose)
+        valid = WaterRangeDetection._prepare_cnr_data(
+            data_db, min_cnr, cnr_hard_target, verbose
+        )
         if not valid:
             if verbose > 1:
                 print("Not valid, will return NAN")
@@ -623,7 +689,9 @@ class WaterRangeDetection:
                 # first range with CNR > cnr_noise
                 first_noise_range = mask.idxmax(dim="range").values
                 # print(f"Remove data with range > {first_noise_range}")
-                data_db["cnr"] = data_db["cnr"].where(data_db["range"] < first_noise_range, other=cnr_noise_cut)
+                data_db["cnr"] = data_db["cnr"].where(
+                    data_db["range"] < first_noise_range, other=cnr_noise_cut
+                )
 
         self.cnr_noise = cnr_noise_first_guess
 
@@ -669,12 +737,24 @@ class WaterRangeDetection:
         # -------- find initial guess for range, where drop of CNR [linear scale] is steepest -------- #
 
         if _first_guess_scale == "dB":
-            cnr_roll = data_db["cnr"].rolling(range=_first_guess_roll_window, center=True).mean()
+            cnr_roll = (
+                data_db["cnr"]
+                .rolling(range=_first_guess_roll_window, center=True)
+                .mean()
+            )
         elif _first_guess_scale == "Lin":
-            cnr_roll = db2linear(data_db["cnr"]).rolling(range=_first_guess_roll_window, center=True).mean()
+            cnr_roll = (
+                db2linear(data_db["cnr"])
+                .rolling(range=_first_guess_roll_window, center=True)
+                .mean()
+            )
         else:
-            raise ValueError(f"_first_guess_scale must be either 'dB' or 'Lin', but got {_first_guess_scale}")
-        middle_range = data_db["range"].values[cnr_roll.diff(dim="range").argmin(dim="range").values]
+            raise ValueError(
+                f"_first_guess_scale must be either 'dB' or 'Lin', but got {_first_guess_scale}"
+            )
+        middle_range = data_db["range"].values[
+            cnr_roll.diff(dim="range").argmin(dim="range").values
+        ]
         if verbose > 1:
             print(f"first guess for middle range: {middle_range}")
 
@@ -697,7 +777,9 @@ class WaterRangeDetection:
         elif func in ["Convo", "LinConvo", "LinConvo_pulse", "Convo_pulse"]:
             diff_r = np.diff(data_use["range"].values)
             if not np.allclose(diff_r, diff_r[0]):
-                raise ValueError("For convolution fit methods, the range gates must be equidistantly spaced!")
+                raise ValueError(
+                    "For convolution fit methods, the range gates must be equidistantly spaced!"
+                )
 
             if self.use_linear_scale:
                 # convert back into dB scale, which is used for parametrisation in convo
@@ -706,7 +788,12 @@ class WaterRangeDetection:
                 high_cnr = linear2db(high_cnr)
 
             # for convolution, all input parameters are defined in dB and are converted into linear scale within the model function
-            _boundorder = [distance_bounds, lin_factor_bounds, general_cnr_bounds, cnr_noise_bounds]
+            _boundorder = [
+                distance_bounds,
+                lin_factor_bounds,
+                general_cnr_bounds,
+                cnr_noise_bounds,
+            ]
             first_guess = [dist_guess, lin_fac_guess, high_cnr, cnr_noise_first_guess]
 
             if verbose > 1 and fit_method != "minimize":
@@ -725,7 +812,11 @@ class WaterRangeDetection:
                 print("Upsampling data for convolution fit")
             data_use_original = data_use.copy()
             data_use = data_use.copy().interp(
-                range=np.arange(np.nanmin(data_use["range"].values), np.nanmax(data_use["range"].values), 0.5),
+                range=np.arange(
+                    np.nanmin(data_use["range"].values),
+                    np.nanmax(data_use["range"].values),
+                    0.5,
+                ),
                 method="linear",
             )
 
@@ -758,7 +849,7 @@ class WaterRangeDetection:
             LinConvo=self._convolution_fit_wrapper,
             LinConvo_pulse=self._convolution_fit_wrapper_pulsevar,
         )[func]
-        
+
         errorfunc = dict(
             Convo=WaterRangeDetection.convolution_fit_error,
             Convo_pulse=WaterRangeDetection.convolution_fit_error_pulsevar,
@@ -768,7 +859,9 @@ class WaterRangeDetection:
 
         def _calc_residuals(params):
             """wrapper to calculate the fit residuals for the least squares fitting routine"""
-            residuals = fitfunc(data_use["range"].values, *params) - data_use["cnr"].values
+            residuals = (
+                fitfunc(data_use["range"].values, *params) - data_use["cnr"].values
+            )
             return residuals
 
         if verbose > 1:
@@ -819,7 +912,9 @@ class WaterRangeDetection:
                 param = [np.nan] * len(first_guess)
 
         elif fit_method == "ODR":
-            raise ValueError("ODR not supported anymore, due to non-consideration of bounds!")
+            raise ValueError(
+                "ODR not supported anymore, due to non-consideration of bounds!"
+            )
             from scipy.odr import ODR, Model, RealData
 
             model = Model(lambda param, x: fitfunc(x, *param))
@@ -839,17 +934,33 @@ class WaterRangeDetection:
         # --------------------------- get result parameter --------------------------- #
         if func in ["LinSig", "Gra24", "dBSig", "standard"]:
             distance, lower, upper, growth, linearfac = param[:5]
-            result_dict = dict(distance=distance, lower=lower, upper=upper, growth=growth, linearfac=linearfac)
-        elif func == 'Rot21':
+            result_dict = dict(
+                distance=distance,
+                lower=lower,
+                upper=upper,
+                growth=growth,
+                linearfac=linearfac,
+            )
+        elif func == "Rot21":
             distance, lower, upper, growth = param[:4]
-            result_dict = dict(distance=distance, lower=lower, upper=upper, growth=growth)
+            result_dict = dict(
+                distance=distance, lower=lower, upper=upper, growth=growth
+            )
         elif func in ["Convo", "LinConvo"]:
             distance, linearfac, upper, lower = param[:4]
-            result_dict = dict(distance=distance, linearfac=linearfac, upper=upper, noise=lower)
+            result_dict = dict(
+                distance=distance, linearfac=linearfac, upper=upper, noise=lower
+            )
             data_use = data_use_original
         elif func in ["Convo_pulse", "LinConvo_pulse"]:
             distance, linearfac, upper, noise, FWHM = param[:5]
-            result_dict = dict(distance=distance, linearfac=linearfac, upper=upper, noise=noise, FWHM=FWHM)
+            result_dict = dict(
+                distance=distance,
+                linearfac=linearfac,
+                upper=upper,
+                noise=noise,
+                FWHM=FWHM,
+            )
             data_use = data_use_original
 
         else:
@@ -864,34 +975,33 @@ class WaterRangeDetection:
                     print("CNR too low of min_cnr")
                     print(f"Min CNR: {min_cnr}, param: {param[0]}")
                 distance = np.nan
-        # TODO: implement checks, if solution is close to bounds
+
         # print(result_dict)
         if "growth" in result_dict.keys():
             if np.isclose(result_dict["growth"], _boundorder[3][0]) or np.isclose(
                 result_dict["growth"], _boundorder[3][1]
             ):
                 if verbose > 1:
-                    print("Growth rate close to bounds, probably no Sea hit or fit did not converge properly")
-                    print(f"Growth rate: {result_dict['growth']}, bounds: {_boundorder[3]}")
+                    print(
+                        "Growth rate close to bounds, probably no Sea hit or fit did not converge properly"
+                    )
+                    print(
+                        f"Growth rate: {result_dict['growth']}, bounds: {_boundorder[3]}"
+                    )
                 distance = np.nan
 
-        # elif growth < growth_rate_faulty:
-        #     if verbose > 0:
-        #         print("Growth rate too small, probably no Sea hit")
-        #         print(f"Min rate: {growth_rate_faulty}, param: {growth}")
-        # distance = np.nan
-        # elif (not use_linear_scale and (upper - lower) < min_cnr_diff) or (
-        #     use_linear_scale and (linear2db(upper) - linear2db(lower)) < min_cnr_diff
-        # ):
-        #     if verbose > 0:
-        #         print("CNR difference too small, probably no Sea hit")
-        #         print(f"CNR lower: {lower}, CNR upper: {upper}, min_diff: {min_cnr_diff}")
-        #     distance = np.nan
-
         # --------------------------- return function call --------------------------- #
-        residuals = np.sum((fitfunc(data_use["range"].values, *param) - data_use["cnr"].values) ** 2)
+        residuals = np.sum(
+            (fitfunc(data_use["range"].values, *param) - data_use["cnr"].values) ** 2
+        )
 
-        ret_obj = CNRFitResult(True if not np.isnan(distance) else False, distance, residuals, param, result_dict)
+        ret_obj = CNRFitResult(
+            True if not np.isnan(distance) else False,
+            distance,
+            residuals,
+            param,
+            result_dict,
+        )
 
         if return_fit or show_plot:
             fitdata = fitfunc(data_use["range"].values, *param)
@@ -907,8 +1017,14 @@ class WaterRangeDetection:
         if return_fit:
             fitdata = xr.Dataset(
                 {
-                    "fit_db": (["range"], fitdata if not self.use_linear_scale else linear2db(fitdata)),
-                    "fit_lin": (["range"], fitdata if self.use_linear_scale else db2linear(fitdata)),
+                    "fit_db": (
+                        ["range"],
+                        fitdata if not self.use_linear_scale else linear2db(fitdata),
+                    ),
+                    "fit_lin": (
+                        ["range"],
+                        fitdata if self.use_linear_scale else db2linear(fitdata),
+                    ),
                     "data_db": (["range"], data_db["cnr"].values),
                     "data_lin": (["range"], db2linear(data_db["cnr"].values)),
                 },
@@ -918,7 +1034,9 @@ class WaterRangeDetection:
         return ret_obj
 
     @staticmethod
-    def _prepare_cnr_data(data: xr.Dataset, min_cnr: float, cnr_hard_target: float, verbose: int = 0) -> bool:
+    def _prepare_cnr_data(
+        data: xr.Dataset, min_cnr: float, cnr_hard_target: float, verbose: int = 0
+    ) -> bool:
         """Preparation of CNR data for Sigmoid fitting: Check if data is valid for lidar-water range
 
         Args:
@@ -941,17 +1059,23 @@ class WaterRangeDetection:
         # ------------------------------ clean cnr data ------------------------------ #
         if data["cnr"].max() < min_cnr:
             if verbose > 1:
-                print(f"CNR too low: min CNR:{min_cnr} dB, but data max is {data['cnr'].max().values:.2f}")
+                print(
+                    f"CNR too low: min CNR:{min_cnr} dB, but data max is {data['cnr'].max().values:.2f}"
+                )
             return False
         if data["cnr"].max() > cnr_hard_target:
             if verbose > 1:
-                print(f"Hard target found: {data['cnr'].max().values}, {cnr_hard_target}")
+                print(
+                    f"Hard target found: {data['cnr'].max().values}, {cnr_hard_target}"
+                )
             return False
 
         return True
 
     @staticmethod
-    def _plot_distance_retrieval(data: xr.Dataset, ret_object: CNRFitResult, fitdata: xr.Dataset) -> plt.Figure:
+    def _plot_distance_retrieval(
+        data: xr.Dataset, ret_object: CNRFitResult, fitdata: xr.Dataset
+    ) -> plt.Figure:
         """Plot the distance retrieval of the lidar-water range determination
 
         Args:
@@ -971,7 +1095,8 @@ class WaterRangeDetection:
             linewidth=2,
             color="k",
             # label="Fit with " + ", ".join([f"{p:.3f}" for p in param]),
-            label=f"Fit with:" + "\n".join([f"{k}: {v:.4f}" for k, v in ret_object.params.items()]),
+            label=f"Fit with:"
+            + "\n".join([f"{k}: {v:.4f}" for k, v in ret_object.params.items()]),
         )
         ax.axvline(ret_object.r_water)
         ax.legend(loc="lower left")
@@ -1004,7 +1129,7 @@ class SSC:
     """Base class for the SeaSurfaceCalibration from surrounding lidar scans and derived lidar-water ranges.
     For a detailed description of the SSC see the documentation or:
 
-    Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+    Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 
     Many parts are based on the Sea Surface Leveling by Rott et al. 2022:
     Rott, A., Schneemann, J., Theuer, F., Trujillo Quintero, J. J., & Kühn, M. (2022). Alignment of scanning lidars in offshore wind farms. Wind Energy Science, 7(1), 283–297. https://doi.org/10.5194/wes-7-283-2022
@@ -1040,7 +1165,11 @@ class SSC:
                 )
 
     def get_all_water_ranges(
-        self, n_processes: int = 1, pulse: PulseShape = None, saveplot: bool | str = False, **kwargs
+        self,
+        n_processes: int = 1,
+        pulse: PulseShape = None,
+        saveplot: bool | str = False,
+        **kwargs,
     ):
         """Wrapper for WaterRangeDetermination objects to get the lidar-water range for all measurements in the dataset.
 
@@ -1080,9 +1209,9 @@ class SSC:
                     print("Not enough data to fit CNR data")
                 ret = CNRFitResult(False, np.nan)
             else:
-                ret = WaterRangeDetection(dstime, verbose=self.verbose, pulse=pulse).get_water_range_from_cnr(
-                    show_plot=saveplot, **kwargs
-                )
+                ret = WaterRangeDetection(
+                    dstime, verbose=self.verbose, pulse=pulse
+                ).get_water_range_from_cnr(show_plot=saveplot, **kwargs)
             return ret if return_dict else ret.r_water
 
         if n_processes == 1:
@@ -1109,7 +1238,8 @@ class SSC:
 
             ## extending for all fit parameters: results is a list of dicts
             results = Parallel(n_jobs=n_processes, verbose=5)(
-                delayed(lambda x: perform_detection(x, return_dict=True))(ti) for ti in iterator
+                delayed(lambda x: perform_detection(x, return_dict=True))(ti)
+                for ti in iterator
             )
             ds["water_range"].loc[dict(time=ds["time"])] = [r.r_water for r in results]
             # assigning all values back, might not be optimal implementation but works
@@ -1117,7 +1247,10 @@ class SSC:
                 if res.success:
                     for k, v in res.params.items():
                         if f"{k}" not in ds.variables:
-                            ds[f"{k}"] = ("time", np.full_like(ds["time"], np.nan, dtype=float))
+                            ds[f"{k}"] = (
+                                "time",
+                                np.full_like(ds["time"], np.nan, dtype=float),
+                            )
                         ds[f"{k}"].loc[dict(time=time)] = v
 
         ds["water_range"].attrs = dict(standard_name="Range to water", units="m")
@@ -1158,7 +1291,8 @@ class SSC:
         los_elevation = (
             np.deg2rad(lidar_roll) * np.cos(azimuth_rad)
             - np.deg2rad(lidar_pitch) * np.sin(azimuth_rad)
-            - (lidar_height - (los_water_range) ** 2 / (2 * EarthCurvature._R_earth)) / los_water_range
+            - (lidar_height - (los_water_range) ** 2 / (2 * EarthCurvature._R_earth))
+            / los_water_range
             + np.deg2rad(elevation_offset)
         )
 
@@ -1201,7 +1335,9 @@ class SSC:
         )
 
         if fit_method == "lorentz":
-            fit_error = np.log(1 + 0.5 * (measured_data["elevation"] - misalignment_fit) ** 2)
+            fit_error = np.log(
+                1 + 0.5 * (measured_data["elevation"] - misalignment_fit) ** 2
+            )
 
         elif fit_method == "LSQ":
             fit_error = (measured_data["elevation"] - misalignment_fit) ** 2
@@ -1247,11 +1383,15 @@ class SSC:
 
         los_rotation = R.from_euler(
             "xz",
-            np.stack((np.atleast_1d(actual_los_elevation), np.atleast_1d(-los_azimuth))).T,
+            np.stack(
+                (np.atleast_1d(actual_los_elevation), np.atleast_1d(-los_azimuth))
+            ).T,
             degrees=True,
         ).as_matrix()
 
-        lidar_rot = R.from_euler("xy", [lidar_pitch, lidar_roll], degrees=True).as_matrix()
+        lidar_rot = R.from_euler(
+            "xy", [lidar_pitch, lidar_roll], degrees=True
+        ).as_matrix()
 
         # zero azimuth is defined as in y-direction
         los_unit_vector = lidar_rot @ los_rotation @ np.array([0, 1, 0])
@@ -1266,7 +1406,9 @@ class SSC:
 
             water_range = np.array(
                 [
-                    EarthCurvature.get_intercept_with_curvature(lidar_height, np.rad2deg(np.arcsin(vc)))
+                    EarthCurvature.get_intercept_with_curvature(
+                        lidar_height, np.rad2deg(np.arcsin(vc))
+                    )
                     for vc in vert_comp
                 ]
             )
@@ -1341,7 +1483,7 @@ class SSC:
         """Get the external misalignment (pitch, roll, height), and internal misalignment (elevation offset) from multi-elevation scans of the water
 
         Following:
-        Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+        Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 
 
         Args:
@@ -1364,7 +1506,9 @@ class SSC:
         bounds = [[-5, 5], [-5, 5], [0, 100]]
 
         # remove nan values from data
-        data = data_in.dropna(dim="time", subset=["water_range", "azimuth", "elevation"])
+        data = data_in.dropna(
+            dim="time", subset=["water_range", "azimuth", "elevation"]
+        )
         # if fixed_height is defined, the fit will be forced to this value
         if fixed_height is not None:
             x0[2] = fixed_height
@@ -1373,7 +1517,9 @@ class SSC:
         if consider_elevation_offset:
             ## check if data allows for estimation of elevation error:
             if data["elevation"].max() - data["elevation"].min() < 0.5:
-                print("Elevation error is not possible, because elevation variation is too small")
+                print(
+                    "Elevation error is not possible, because elevation variation is too small"
+                )
                 SSCFitResults(False, [np.nan], {})
             x0 = x0 + [0.01]
             bounds = bounds + [[-1, 1]]
@@ -1427,7 +1573,9 @@ class SSC:
                     # label = 'Measured data',
                     cbar_kwargs=dict(label=r"Elevation $\varphi$ [deg]"),
                 )
-                disti = SSC.rotated_water_range(data["elevation"], data["azimuth"], *res.x)
+                disti = SSC.rotated_water_range(
+                    data["elevation"], data["azimuth"], *res.x
+                )
                 ax.scatter(
                     data["azimuth"],
                     disti,
@@ -1451,7 +1599,9 @@ class SSC:
                     cbar_kwargs=dict(label=r"Lidar azimuth $\theta$ [deg]"),
                 )
 
-                model_elevations = SSC.rotated_water_elevation(data["water_range"], data["azimuth"], *res.x)
+                model_elevations = SSC.rotated_water_elevation(
+                    data["water_range"], data["azimuth"], *res.x
+                )
                 ax.scatter(
                     data["water_range"],
                     model_elevations,
@@ -1487,8 +1637,12 @@ class SSC:
             distance_feet (float, optional): distance between the legs of the lidar that contain the screws for lifting [m]. Defaults to 1,.
         """
 
-        left_leg_rotations = distance_feet * np.sin(np.deg2rad(result["roll"])) / gewinde_steigung
-        front_leg_rotations = distance_feet * np.sin(np.deg2rad(result["pitch"])) / gewinde_steigung
+        left_leg_rotations = (
+            distance_feet * np.sin(np.deg2rad(result["roll"])) / gewinde_steigung
+        )
+        front_leg_rotations = (
+            distance_feet * np.sin(np.deg2rad(result["pitch"])) / gewinde_steigung
+        )
         print(f'Pitch: {result["pitch"]:.3f}°')
         print(f'Roll: {result["roll"]:.3f}°')
         print(
@@ -1516,7 +1670,9 @@ class EarthCurvature:
         return heightdifference
 
     @staticmethod
-    def get_intercept_with_curvature(height: float, elevation: float, max_distance: float = 10_000) -> float:
+    def get_intercept_with_curvature(
+        height: float, elevation: float, max_distance: float = 10_000
+    ) -> float:
         """Get interception point between a line (beam of lidar) and a circle (earth curvature)
         This is required if you want to find out, where your line-of-sight would hit the water.
 
@@ -1552,7 +1708,9 @@ class EarthCurvature:
             return res  # keep only first intercept
         except ValueError as E:
             # print(E)
-            print(f"No solution found, maybe you will never touch the water at this elevation {elevation:.3f}°")
+            print(
+                f"No solution found, maybe you will never touch the water at this elevation {elevation:.3f}°"
+            )
             return np.nan
 
 
@@ -1584,7 +1742,10 @@ if __name__ == "__main__":
     distances = []
     dist_no_curv = []
     for ele in eles:
-        distances.append(EarthCurvature.get_intercept_with_curvature(h, ele) / np.cos(np.deg2rad(ele)))
+        distances.append(
+            EarthCurvature.get_intercept_with_curvature(h, ele)
+            / np.cos(np.deg2rad(ele))
+        )
         dist_no_curv.append(-h / np.sin(np.deg2rad(ele)))
 
     ax.plot(eles, distances, label="$d$ (Curvature)")
@@ -1630,10 +1791,13 @@ def distance_to_water(
             distance = np.nan
         else:
             fit_function = (
-                lambda up, down, mid, growth: (up - down) / (1 + np.exp((data_act.range - mid) * growth)) + down
+                lambda up, down, mid, growth: (up - down)
+                / (1 + np.exp((data_act.range - mid) * growth))
+                + down
             )
             cost_function = lambda param: np.sum(
-                (data_act.cnr - fit_function(param[0], param[1], param[2], param[3])) ** 2
+                (data_act.cnr - fit_function(param[0], param[1], param[2], param[3]))
+                ** 2
             )
             bounds = Bounds(
                 [high_cnr_lb, low_cnr_lb, distance_lb, growth_lb],
@@ -1645,9 +1809,13 @@ def distance_to_water(
             low_cnr = data_act.cnr.min()
             middle_cnr = (high_cnr + low_cnr) / 2
             min_distance = data_act.range[data_act.cnr > middle_cnr].min()
-            middle_range = data_act.range[(data_act.range > min_distance) & (data_act.cnr <= middle_cnr)].min()
+            middle_range = data_act.range[
+                (data_act.range > min_distance) & (data_act.cnr <= middle_cnr)
+            ].min()
 
-            res = minimize(cost_function, [high_cnr, low_cnr, middle_range, 0.1], bounds=bounds)
+            res = minimize(
+                cost_function, [high_cnr, low_cnr, middle_range, 0.1], bounds=bounds
+            )
             #             print(res)
             if res.x[0] < min_cnr - 3:
                 distance = np.nan
@@ -1675,10 +1843,14 @@ def distance_to_water(
                     linewidth=2,
                     color="k",
                 )
-                ax.vlines(res.x[2], data_act["cnr"].min() - 1, data_act["cnr"].max() + 1)
+                ax.vlines(
+                    res.x[2], data_act["cnr"].min() - 1, data_act["cnr"].max() + 1
+                )
                 ax.autoscale(enable=True, axis="both", tight=True)
                 plt.show()
-                print(f"high cnr: {res.x[0]} dB, low_cnr: {res.x[1]} dB, growth_rate: {res.x[3]}")
+                print(
+                    f"high cnr: {res.x[0]} dB, low_cnr: {res.x[1]} dB, growth_rate: {res.x[3]}"
+                )
                 print(f"Azimut Angle: {azi}° and estimated distance: {distance} m")
         distances = np.append(distances, distance)
     return azis[~np.isnan(distances)], distances[~np.isnan(distances)]
@@ -1688,16 +1860,26 @@ def fit_function(pitch, roll, height, ele, yaw, s_x=-0.15, s_y=0.15):
     return (
         height
         + s_x * np.sin(yaw / 180 * np.pi) * np.sin(pitch / 180 * np.pi)
-        + s_x * np.sin(roll / 180 * np.pi) * np.cos(yaw / 180 * np.pi) * np.cos(pitch / 180 * np.pi)
-        + s_y * np.sin(yaw / 180 * np.pi) * np.sin(roll / 180 * np.pi) * np.cos(pitch / 180 * np.pi)
+        + s_x
+        * np.sin(roll / 180 * np.pi)
+        * np.cos(yaw / 180 * np.pi)
+        * np.cos(pitch / 180 * np.pi)
+        + s_y
+        * np.sin(yaw / 180 * np.pi)
+        * np.sin(roll / 180 * np.pi)
+        * np.cos(pitch / 180 * np.pi)
         - s_y * np.sin(pitch / 180 * np.pi) * np.cos(yaw / 180 * np.pi)
     ) / (
         np.cos(ele / 180 * np.pi)
         * (
             np.cos(yaw / 180 * np.pi) * np.sin(pitch / 180 * np.pi)
-            - np.cos(pitch / 180 * np.pi) * np.sin(roll / 180 * np.pi) * np.sin(yaw / 180 * np.pi)
+            - np.cos(pitch / 180 * np.pi)
+            * np.sin(roll / 180 * np.pi)
+            * np.sin(yaw / 180 * np.pi)
         )
-        - np.cos(pitch / 180 * np.pi) * np.cos(roll / 180 * np.pi) * np.sin(ele / 180 * np.pi)
+        - np.cos(pitch / 180 * np.pi)
+        * np.cos(roll / 180 * np.pi)
+        * np.sin(ele / 180 * np.pi)
     )
 
 
@@ -1714,10 +1896,26 @@ def lidar_alignment(data, minimum_cnr, approx_height_above_nn, ele):
     method = "lorentz"
     if method == "lorentz":
         Cost = lambda x: np.sum(
-            np.log(1 + 0.5 * (Distance - fit_function(pitch=x[0], roll=x[1], height=x[2], ele=ele, yaw=Azi)) ** 2)
+            np.log(
+                1
+                + 0.5
+                * (
+                    Distance
+                    - fit_function(pitch=x[0], roll=x[1], height=x[2], ele=ele, yaw=Azi)
+                )
+                ** 2
+            )
         )
     elif method == "least-squares":
-        Cost = lambda x: np.sum((Distance - fit_function(pitch=x[0], roll=x[1], height=x[2], ele=ele, yaw=Azi)) ** 2)
-    res = minimize(Cost, x0, method="nelder-mead", options={"xatol": 1e-8, "disp": False})
+        Cost = lambda x: np.sum(
+            (
+                Distance
+                - fit_function(pitch=x[0], roll=x[1], height=x[2], ele=ele, yaw=Azi)
+            )
+            ** 2
+        )
+    res = minimize(
+        Cost, x0, method="nelder-mead", options={"xatol": 1e-8, "disp": False}
+    )
     p, r, h = res.x
     return p, r, h, Azi, Distance, start_time

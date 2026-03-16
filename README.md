@@ -55,7 +55,7 @@ Paul Meyer, Andreas Rott, Jörge Schneemann, Janna K. Seifer et al. from ForWind
 
 The general work please cite with:
 ```
-Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kuhn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
+Meyer, P., Rott, A., Schneemann, J., Gramitzky, K., Pauscher, L., & Kühn, M. (2026). Experimental validation of the Sea-Surface-Calibration for scanning lidar static elevation offset determination (in preparation).
 ```
 and 
 ```
