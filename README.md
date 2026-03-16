@@ -16,25 +16,20 @@ We do not claim full completeness and hope for contributions from the community.
 The work is heavily based on previous work by Rott et al., which can be found [in this github repository](https://zenodo.org/records/5654919).
 
 ## Documentation:
-For the documentation of the code and some examples, see the [HTML docs of lidalign]().
+For the documentation of the code and some examples, see the [HTML docs of lidalign](https://pamean.github.io/lidalign/).
 
 ## How to use:
 For the installation, we recommend the use of [Astral uv](https://docs.astral.sh/uv/), a fast python package manager. Alternatively, you can replace the `uv pip` commands with `python -m pip` in the following. 
 
 ### Installation for direct use
-Installation of the package (including the codes for the evaluation for the publication) should be possible through:
-
+Installation of the package (including the codes for the evaluation for the publication) is possible through:
 ```
-SSH:
-uv pip install "git+ssh://git@..."
-
-HTTPS:
-uv pip install "git+https://gitlab."
+uv pip install "uv pip install git+https://github.com/PaMeAn/lidalign.git"
 ```
 ### Development
 If you want to develop the packages, clone the repository first:
 ```
-git clone https://
+git clone https://github.com/PaMeAn/lidalign.git
 ```
 and then install editable:
 ```
@@ -47,7 +42,8 @@ uv pip install -e .[dev]
 ```
 The "-e" indicates, the package is editable, so scripts can be changed and updated. If you do not plan to contribute, you can install without -e.
 
-If you made edits, please create branches and create merge requests, so the code keeps developing!
+# Contributing
+If you made edits, please create branches and create merge requests, so the code keeps developing! If you find issues or you are missing functionalities, let us know in the issues!
 
 # How to cite
 If used, please cite with the following:
