@@ -13,6 +13,8 @@ Mainly, the package contains the following scripts:
 
 We do not claim full completeness and hope for contributions from the community.
 
+The work is heavily based on previous work by Rott et al., which can be found [in this github repository](https://zenodo.org/records/5654919).
+
 ## Documentation:
 For the documentation of the code and some examples, see the [HTML docs of lidalign]().
 
