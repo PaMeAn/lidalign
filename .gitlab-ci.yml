@@ -1,0 +1,31 @@
+image: python:3.12
+
+stages:
+  - pages
+
+pages:
+  stage: pages
+  script:
+    # do the make html offline first
+    - python -m pip install -U pip
+    # - uv venv .venv
+    # - .venv/Scripts/activate
+    - pip install -e ".[dev]"
+
+    # # Build docs
+    - cd docs
+    - mkdir build
+    -  cmd /c generate_sphinx.bat
+    # - make clean
+    # - make html
+    # - python -m sphinx -b html docs/source docs/build/html
+    # GitLab Pages expects a folder named "public" at repo root
+    - cd ..
+    - if (Test-Path public) { Remove-Item -Recurse -Force public } 
+    - New-Item -ItemType Directory -Force -Path public
+    - Copy-Item -Path docs\build\html\* -Destination public -Recurse -Force
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

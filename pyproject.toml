@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0","wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lidalign"
+version = "0.1.0"
+description = "Python scripts for the alignment of scanning lidars in offshore (and onshore) environements"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  {name = "Paul Meyer, Andreas Rott, Janna K. Seifert, Jörge Schneemann", email = "paul.meyer@uni-oldenburg.de"}
+]
+maintainers = [
+  {name = "Paul Meyer, Andreas Rott, Janna K. Seifert, Jörge Schneemann", email = "paul.meyer@uni-oldenburg.de"}
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+keywords = ["lidar", "wind energy", "offshore", "calibration", "alignment"]
+
+dependencies = [
+    "jupyter",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "netCDF4",
+    "xarray",
+    "plotly", 
+    'scipy',
+    "tqdm",
+    "scikit-image",
+    "openpyxl",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",  # testing
+    "sphinx",
+    "nbsphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+    "sphinxcontrib-napoleon",
+    "myst_nb",
+]
+[tool.setuptools.packages.find]
+where = ["."]
+
