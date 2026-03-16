@@ -1,7 +1,7 @@
 # Lidalign Python Package
 Welcome to the Lidalign Python package! This package contains some python scripts for the alignment and pointing calibration of scanning wind lidars offshore! 
 
-<img src="docs/figures/ScanningLidar_atTP_nolidar.jpg" alt="Installation procedure" width="300"/>
+<img src="docs/source/_static/pictures/ScanningLidar_atTP_nolidar.png" alt="Installation procedure" width="300"/>
 
 
 
