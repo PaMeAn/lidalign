@@ -48,7 +48,7 @@ If you made edits, please create branches and create merge requests, so the code
 # How to cite
 If used, please cite with the following:
 ```
-Paul Meyer, Andreas Rott, Jörge Schneemann, Janna K. Seifer et al. from ForWind (2026). Lidalign python package (DOI to be added)
+Meyer, P. J., Rott, A., Seifert, J. K., & Schneemann, J. (2026). Lidalign python package (V.2.0). Zenodo. https://doi.org/10.5281/zenodo.19056909
 ```
 
 The general work please cite with:
