@@ -13,7 +13,7 @@ Mainly, the package contains the following scripts:
 
 We do not claim full completeness and hope for contributions from the community.
 
-The work is heavily based on previous work by Rott et al., which can be found [in this github repository](https://zenodo.org/records/5654919).
+The work is heavily based on previous work by Rott et al., which can be found [in this zenodo repository](https://zenodo.org/records/5654919).
 
 ## Documentation:
 For the documentation of the code and some examples, see the [HTML docs of lidalign](https://pamean.github.io/lidalign/).
@@ -48,7 +48,7 @@ If you made edits, please create branches and create merge requests, so the code
 # How to cite
 If used, please cite with the following:
 ```
-Paul Meyer, Andreas Rott, Jörge Schneemann, Janna K. Seifer et al. from ForWind (2026). Lidalign python package (DOI to be added)
+Meyer, P. J., Rott, A., Seifert, J. K., & Schneemann, J. (2026). Lidalign python package (V.2.0). Zenodo. https://doi.org/10.5281/zenodo.19056909
 ```
 
 The general work please cite with:
