@@ -1423,6 +1423,7 @@ class SSC:
         fit_method: str = "lorentz",
         error_normalized: bool = True,
         consider_earth_curvature: bool = True,
+        return_residuals: bool = False,
     ) -> float:
         """Get the sum of squared errors for the range residuals during the SSC fit
 
@@ -1432,6 +1433,7 @@ class SSC:
             fit_method (Literal["LSQ", "lorentz"], optional): Fit method to use, can be LSQ or lorentz (less weighting of outliers). Defaults to "lorentz".
             error_normalized (bool, optional): Normalize errors with range?. Defaults to True.
             consider_earth_curvature (bool, optional): Consider earth curvature or flat plate of earth (False). Defaults to True.
+            return_residuals (bool, optional): Whether to return the residuals. Defaults to False.
 
         Returns:
             float: sum of squared errors
@@ -1464,6 +1466,8 @@ class SSC:
         else:
             raise ValueError('Unkwown fit method, use "lorentz" or "LSQ"')
 
+        if return_residuals:
+            return fit_error
         return np.sum(fit_error)
 
     @staticmethod
@@ -1479,6 +1483,7 @@ class SSC:
         ax=None,
         fixed_height: float | None = None,
         reduce_errors: Literal["ranges", "elevation"] = "ranges",
+        return_fit: bool = False,
     ) -> SSCFitResults:
         """Get the external misalignment (pitch, roll, height), and internal misalignment (elevation offset) from multi-elevation scans of the water
 
@@ -1498,6 +1503,8 @@ class SSC:
             ax (_type_, optional): axes for plotting, if plot=True. Defaults to None.
             fixed_height (float | None, optional): Fixed height value. If this value is set, it will force the fit to use this value. Can be used, if the exact height is known. Otherwise, it is neglected. Defaults to None.
             reduce_errors (Literal['ranges','elevation'], optional): How to calculate the residuals. Defaults to 'ranges'. Possibly, in Gramitzky 2025 et al. only elevation residuals are used (to be confirmed).
+            return_fit (bool, optional): Whether to return the fit data. Defaults to False.
+
 
         Returns:
             SSCFitResults: Results of the misalignment fit. Contains the attributes sucess (bool), x (NDArray[np.float64]) with the fitted parameters and result_dict (dict) with the named parameters.
@@ -1620,6 +1627,23 @@ class SSC:
             )
             fit_results_obj.fig = plt.gcf()
             fit_results_obj.ax = ax
+
+        # currently only works with range fit, but could be easily extended to elevation fit as well
+        if return_fit:
+            fit_data = data.copy()
+            fit_data["fit_water_range"] = (
+                ["time"],
+                SSC.rotated_water_range(data["elevation"], data["azimuth"], *res.x),
+            )
+            fit_data["residuals"] = SSC._misalignment_fit_range_error(
+                res.x,
+                data,
+                fit_method=fit_method,
+                consider_earth_curvature=consider_earth_curvature,
+                error_normalized=error_normalized,
+                return_residuals=True,
+            )
+            fit_results_obj.fit_data = fit_data
 
         return fit_results_obj
 
