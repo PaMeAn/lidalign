@@ -1123,6 +1123,7 @@ class SSCFitResults:
     success: bool
     x: NDArray[np.float64]
     result_dict: dict = None
+    residual: float = np.inf
 
 
 class SSC:
@@ -1527,7 +1528,7 @@ class SSC:
                 print(
                     "Elevation error is not possible, because elevation variation is too small"
                 )
-                SSCFitResults(False, [np.nan], {})
+                return SSCFitResults(False, [np.nan], {}, np.inf)
             x0 = x0 + [0.01]
             bounds = bounds + [[-1, 1]]
 
@@ -1552,7 +1553,7 @@ class SSC:
         if not res.success:
             print("Found a problem, see")
             print(res)
-            return SSCFitResults(False, [np.nan], {})
+            return SSCFitResults(False, [np.nan], {}, np.inf)
 
         result = dict(
             roll=res.x[0],
@@ -1560,7 +1561,7 @@ class SSC:
             height=res.x[2],
             ele_offset=res.x[3] if len(res.x) > 3 else 0,
         )
-        fit_results_obj = SSCFitResults(True, res.x, result)
+        fit_results_obj = SSCFitResults(True, res.x, result, res.fun)
 
         if print_help:
             SSC.interprete_results(result)
@@ -1620,7 +1621,16 @@ class SSC:
                     rf"$h$={result['height']:.2f}m, $\varphi_0$={result['ele_offset']:.3f}°",
                 )
 
-            ax.legend(loc="upper right")
+            # ax.legend(loc="upper right")
+            ax.legend(
+                loc="upper center",
+                bbox_to_anchor=(0.5, 1.15),
+                ncol=2,
+                frameon=True,
+                fancybox=True,
+                shadow=True,
+            )
+
             ax.grid(alpha=0.3, ls="--")
             ax.set(
                 title=f"{pd.to_datetime(data['time'].values[0]).strftime('%Y-%m-%d %H:%M:%S')}"  #: Elevation {data["elevation"].mean().values:.2f}
