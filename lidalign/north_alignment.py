@@ -70,8 +70,8 @@ class Northalignment:
             for time in lidar_data_ds.time:
 
                 lidar_data_dst = lidar_data_ds.sel(time=time)
-                # limit to area around actual maximum
 
+                # limit to area around actual maximum
                 r_max = lidar_data_dst["cnr_lin"].idxmax().values
                 max_data = lidar_data_dst.sel(range=slice(r_max - 200, r_max + 200))
 
@@ -190,7 +190,7 @@ class Northalignment:
         self.all_hard_targets_lidar = all_hard_targets_lidar
         if plot:
             self.plot(
-                result,
+                result.x,
                 lidar_data_df,
                 self.HardTargets,
                 all_hard_targets_lidar=all_hard_targets_lidar,
