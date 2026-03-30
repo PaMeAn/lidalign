@@ -1529,7 +1529,9 @@ class SSC:
                     "Elevation error is not possible, because elevation variation is too small"
                 )
                 return SSCFitResults(False, [np.nan], {}, np.inf)
-            x0 = x0 + [0.01]
+            
+            if not len(x0)==4:
+                x0 = x0 + [0.01]
             bounds = bounds + [[-1, 1]]
 
         # get proper function to minimize
@@ -1680,8 +1682,8 @@ class SSC:
         print(f'Pitch: {result["pitch"]:.3f}°')
         print(f'Roll: {result["roll"]:.3f}°')
         print(
-            f'This means: \n \t- the lidar west legs must go {["up","down"][int(left_leg_rotations>0)]} by {np.abs(left_leg_rotations):.2f} rotations'
-            f'\n \t- the lidar north legs must go {["down","up"][int(front_leg_rotations>0)]} by {np.abs(front_leg_rotations):.2f} rotations'
+            f'This means: \n \t- the lidar west side (both legs) must go {["up","down"][int(left_leg_rotations>0)]} by {np.abs(left_leg_rotations):.2f} rotations of the leg screws'
+            f'\n \t- the lidar north side (both legs) must go {["down","up"][int(front_leg_rotations<0)]} by {np.abs(front_leg_rotations):.2f} rotations of the leg screws'
         )
 
 
