@@ -8,7 +8,7 @@ Welcome to the lidalign documentation! This package provides tools for aligning 
    :width: 400px
    :align: center
 
-   Visualisation of a scanning lidar at an offshore test site. (Photo: Paul Meyer)
+   Visualisation of a SSC scans by a scanning lidar at a TP of an offshore test site. (Photo: Paul Meyer)
 
 
 You will find some usage examples, the analysis of the validation campaign performed at Heligoland and the API Documentation of the package. 

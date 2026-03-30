@@ -14,7 +14,7 @@ Validation Campaign at Heligoland
    Setup of the validation campaign.
 
 
-Here you can find some notebooks that were created for the manuscript: 
+Here you can find some notebooks that were created for validation of the Sea Surface Calibration (SSC) in the manuscript: 
 
     Paul Julian Meyer, Andreas Rott, Jörge Schneemann, Lukas Pauscher, Kira Gramitzky, Martin Kühn: Experimental validation of the Sea Surface Calibration for scanning lidar static elevation offset determination, Torque 2026 (in preparation)
 
